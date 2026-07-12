@@ -1,39 +1,29 @@
-// Design tokens del dashboard — estética "rollo de comandas"
-// Mostrador oscuro + tickets de papel con borde perforado
+// Design tokens del dashboard — minimalista, admin claro
 
 export const tokens = {
   colors: {
-    counter: '#1C1B19',       // fondo del "mostrador" (chrome de la app)
-    counterRaised: '#26241F', // paneles sobre el mostrador (sidebar, header)
-    counterLine: '#3A372F',   // líneas divisorias sobre el mostrador
-    paper: '#FFFDF7',         // tarjetas tipo ticket
-    paperShade: '#F4EFE2',    // franjas alternas / hover sobre papel
-    ink: '#2B2822',           // texto principal sobre papel
-    inkFaded: '#83796A',      // texto secundario sobre papel
-    onCounter: '#EDE9DD',     // texto principal sobre mostrador
-    onCounterFaded: '#9A9488',// texto secundario sobre mostrador
-    stampRed: '#B23A2E',      // negativo / cancelado / cerrado
-    registerGreen: '#4F7A4F', // positivo / pagado / abierto
-    pendingAmber: '#C98A2C',  // pendiente / en preparación
-    border: '#E6DFCC',
+    bg: '#FAFAF9',
+    surface: '#FFFFFF',
+    border: '#E7E5E0',
+    borderStrong: '#D4D1C9',
+    text: '#1C1B19',
+    textMuted: '#7A776E',
+    sidebar: '#FFFFFF',
+    accent: '#B54708',      // acción primaria
+    accentSoft: '#FBEBDF',
+    success: '#15803D',
+    successSoft: '#EAF6EC',
+    warning: '#B45309',
+    warningSoft: '#FDF1E1',
+    danger: '#B91C1C',
+    dangerSoft: '#FBEAEA',
   },
   fonts: {
-    mono: "'JetBrains Mono', 'Courier New', monospace",
     sans: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    mono: "'JetBrains Mono', 'Courier New', monospace",
   },
   radius: {
-    sm: '4px',
-    md: '8px',
+    sm: '6px',
+    md: '10px',
   },
 };
-
-// Franja de "perforación" para simular el borde arrancado de un ticket
-export const perforatedEdge = (color = tokens.colors.counter) => ({
-  content: '""',
-  display: 'block',
-  height: '10px',
-  width: '100%',
-  backgroundImage: `radial-gradient(circle at 7px 5px, ${color} 5px, transparent 5.5px)`,
-  backgroundSize: '14px 10px',
-  backgroundRepeat: 'repeat-x',
-});
