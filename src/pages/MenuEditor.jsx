@@ -22,7 +22,11 @@ export default function MenuEditor({ businessId }) {
 
   const toggleActive = async (product) => {
     setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, active: !p.active } : p)));
-    await supabase.from('products').update({ active: !product.active }).eq('id', product.id);
+    const { error } = await supabase.from('products').update({ active: !product.active }).eq('id', product.id);
+    if (error) {
+      console.error('Error guardando el estado del producto:', error);
+      loadProducts(); // revertir si falló
+    }
   };
 
   const grouped = products.reduce((acc, p) => {
@@ -102,8 +106,8 @@ const styles = {
   },
   list: { background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, overflow: 'hidden' },
   row: {
-    display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px',
-    borderBottom: `1px solid ${tokens.colors.border}`,
+    display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+    borderBottom: `1px solid ${tokens.colors.border}`, flexWrap: 'wrap', rowGap: '8px',
   },
   thumb: { width: '38px', height: '38px', borderRadius: tokens.radius.sm, objectFit: 'cover' },
   rowName: { fontSize: '14px', color: tokens.colors.text, fontWeight: 500 },
