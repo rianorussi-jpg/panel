@@ -183,9 +183,10 @@ const styles = {
     borderRadius: tokens.radius.md, overflow: 'hidden',
   },
   row: {
-    display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 16px', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', cursor: 'pointer',
+    flexWrap: 'wrap', rowGap: '10px',
   },
-  rowMain: { flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' },
+  rowMain: { flex: 1, minWidth: '110px', display: 'flex', flexDirection: 'column', gap: '2px' },
   customerName: { fontSize: '14px', fontWeight: 500, color: tokens.colors.text },
   time: { fontSize: '12px', color: tokens.colors.textMuted },
   badge: {
@@ -195,6 +196,7 @@ const styles = {
   completeButton: {
     fontSize: '12px', fontWeight: 600, padding: '7px 12px', borderRadius: tokens.radius.sm,
     border: 'none', background: tokens.colors.text, color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap',
+    marginLeft: 'auto',
   },
   detail: {
     borderTop: `1px solid ${tokens.colors.border}`, padding: '12px 16px',
