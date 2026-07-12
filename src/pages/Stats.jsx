@@ -34,13 +34,13 @@ export default function Stats({ businessId }) {
 
       const { data: itemsData } = await supabase
         .from('order_items')
-        .select('product_id, quantity, price, products(name), orders!inner(business_id, created_at)')
+        .select('product_id, product_name, quantity, price, products(name), orders!inner(business_id, created_at)')
         .eq('orders.business_id', businessId)
         .gte('orders.created_at', since.toISOString());
 
       const ranking = {};
       (itemsData || []).forEach((item) => {
-        const name = item.products?.name || 'Producto eliminado';
+        const name = item.products?.name || item.product_name || 'Producto sin nombre';
         ranking[name] = (ranking[name] || 0) + item.quantity;
       });
       const sorted = Object.entries(ranking)
