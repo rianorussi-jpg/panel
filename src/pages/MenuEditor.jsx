@@ -6,7 +6,7 @@ const emptyProduct = { name: '', price: '', category: '', image_url: '', active:
 
 export default function MenuEditor({ businessId }) {
   const [products, setProducts] = useState([]);
-  const [editing, setEditing] = useState(null); // producto en edición, o null
+  const [editing, setEditing] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadProducts = async () => {
@@ -63,10 +63,10 @@ export default function MenuEditor({ businessId }) {
       {loading ? (
         <div style={styles.loading}>Cargando menú…</div>
       ) : products.length === 0 ? (
-        <div style={styles.empty}>Todavía no tienes productos. Agrega el primero.</div>
+        <div style={styles.emptyBox}>Todavía no tienes productos. Agrega el primero.</div>
       ) : (
         Object.entries(grouped).map(([category, items]) => (
-          <div key={category} style={{ marginBottom: '28px' }}>
+          <div key={category} style={{ marginBottom: '24px' }}>
             <div style={styles.categoryLabel}>{category}</div>
             <div style={styles.list}>
               {items.map((p) => (
@@ -79,7 +79,7 @@ export default function MenuEditor({ businessId }) {
                     </div>
                   </div>
                   <button style={styles.linkButton} onClick={() => setEditing(p)}>Editar</button>
-                  <button style={{ ...styles.linkButton, color: tokens.colors.stampRed }} onClick={() => handleDelete(p.id)}>
+                  <button style={{ ...styles.linkButton, color: tokens.colors.danger }} onClick={() => handleDelete(p.id)}>
                     Eliminar
                   </button>
                 </div>
@@ -144,50 +144,53 @@ function ProductModal({ product, onCancel, onSave }) {
 }
 
 const styles = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' },
-  title: { fontFamily: tokens.fonts.mono, fontSize: '22px', color: tokens.colors.onCounter, margin: 0 },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  title: { fontSize: '20px', fontWeight: 600, color: tokens.colors.text, margin: 0 },
   addButton: {
-    fontFamily: tokens.fonts.mono, fontSize: '13px', padding: '10px 16px',
-    background: tokens.colors.pendingAmber, color: tokens.colors.counter,
+    fontSize: '13px', fontWeight: 600, padding: '9px 14px',
+    background: tokens.colors.text, color: '#fff',
     border: 'none', borderRadius: tokens.radius.sm, cursor: 'pointer',
   },
-  loading: { color: tokens.colors.onCounterFaded, fontFamily: tokens.fonts.mono },
-  empty: { color: tokens.colors.onCounterFaded, fontFamily: tokens.fonts.sans, fontSize: '14px' },
-  categoryLabel: {
-    fontFamily: tokens.fonts.mono, fontSize: '11px', letterSpacing: '0.1em',
-    color: tokens.colors.onCounterFaded, marginBottom: '10px', textTransform: 'uppercase',
+  loading: { color: tokens.colors.textMuted, fontSize: '13px' },
+  emptyBox: {
+    color: tokens.colors.textMuted, fontSize: '14px', padding: '32px',
+    textAlign: 'center', border: `1px dashed ${tokens.colors.border}`, borderRadius: tokens.radius.md,
   },
-  list: { background: tokens.colors.paper, borderRadius: tokens.radius.md, overflow: 'hidden' },
+  categoryLabel: {
+    fontSize: '11px', fontWeight: 600, letterSpacing: '0.06em',
+    color: tokens.colors.textMuted, marginBottom: '8px', textTransform: 'uppercase',
+  },
+  list: { background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, overflow: 'hidden' },
   row: {
     display: 'flex', alignItems: 'center', gap: '14px', padding: '12px 16px',
     borderBottom: `1px solid ${tokens.colors.border}`,
   },
-  thumb: { width: '40px', height: '40px', borderRadius: tokens.radius.sm, objectFit: 'cover' },
-  rowName: { fontFamily: tokens.fonts.sans, fontSize: '14px', color: tokens.colors.ink, fontWeight: 500 },
-  rowMeta: { fontFamily: tokens.fonts.mono, fontSize: '12px', color: tokens.colors.inkFaded, marginTop: '2px' },
+  thumb: { width: '38px', height: '38px', borderRadius: tokens.radius.sm, objectFit: 'cover' },
+  rowName: { fontSize: '14px', color: tokens.colors.text, fontWeight: 500 },
+  rowMeta: { fontSize: '12px', color: tokens.colors.textMuted, marginTop: '2px' },
   linkButton: {
     background: 'none', border: 'none', cursor: 'pointer',
-    fontFamily: tokens.fonts.sans, fontSize: '13px', color: tokens.colors.inkFaded,
+    fontSize: '13px', color: tokens.colors.textMuted,
   },
   overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
   },
   modal: {
-    background: tokens.colors.paper, borderRadius: tokens.radius.md,
-    padding: '28px', width: '100%', maxWidth: '400px',
+    background: tokens.colors.surface, borderRadius: tokens.radius.md,
+    padding: '24px', width: '100%', maxWidth: '380px',
     display: 'flex', flexDirection: 'column', gap: '14px',
   },
-  modalTitle: { fontFamily: tokens.fonts.mono, fontSize: '18px', color: tokens.colors.ink, margin: '0 0 6px 0' },
-  label: { display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px', color: tokens.colors.inkFaded },
+  modalTitle: { fontSize: '16px', fontWeight: 600, color: tokens.colors.text, margin: '0 0 4px 0' },
+  label: { display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '13px', color: tokens.colors.textMuted },
   input: {
-    fontFamily: tokens.fonts.sans, fontSize: '14px', padding: '9px 10px',
+    fontSize: '14px', padding: '9px 10px',
     borderRadius: tokens.radius.sm, border: `1px solid ${tokens.colors.border}`, outline: 'none',
   },
-  modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' },
+  modalActions: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' },
   cancelButton: {
-    fontFamily: tokens.fonts.sans, fontSize: '13px', padding: '10px 16px',
+    fontSize: '13px', padding: '9px 14px',
     background: 'transparent', border: `1px solid ${tokens.colors.border}`,
-    borderRadius: tokens.radius.sm, cursor: 'pointer', color: tokens.colors.inkFaded,
+    borderRadius: tokens.radius.sm, cursor: 'pointer', color: tokens.colors.textMuted,
   },
 };
