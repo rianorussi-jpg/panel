@@ -15,6 +15,8 @@ export default function Stats({ businessId }) {
   const [topProducts, setTopProducts] = useState([]);
   const [liveOrders, setLiveOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState(null);
+  const [itemsByOrder, setItemsByOrder] = useState({});
 
   // Carga ventas del período + productos más vendidos
   useEffect(() => {
@@ -59,7 +61,7 @@ export default function Stats({ businessId }) {
     const loadRecent = async () => {
       const { data } = await supabase
         .from('orders')
-        .select('id, customer_name, total, status, created_at')
+        .select('id, customer_name, phone, delivery_type, address, delivery_time, notes, total, status, created_at')
         .eq('business_id', businessId)
         .order('created_at', { ascending: false })
         .limit(15);
@@ -83,6 +85,21 @@ export default function Stats({ businessId }) {
 
     return () => supabase.removeChannel(channel);
   }, [businessId]);
+
+  const toggleExpand = async (orderId) => {
+    if (expandedId === orderId) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(orderId);
+    if (!itemsByOrder[orderId]) {
+      const { data } = await supabase
+        .from('order_items')
+        .select('product_name, products(name), quantity, price')
+        .eq('order_id', orderId);
+      setItemsByOrder((prev) => ({ ...prev, [orderId]: data || [] }));
+    }
+  };
 
   const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
   const chartData = buildDailySeries(orders, RANGES.find((r) => r.key === range).days);
@@ -158,10 +175,34 @@ export default function Stats({ businessId }) {
             <div style={styles.empty}>Aún no hay pedidos.</div>
           ) : (
             liveOrders.map((o) => (
-              <div key={o.id} style={styles.orderRow}>
-                <span style={styles.orderName}>{o.customer_name || 'Cliente'}</span>
-                <span style={{ ...styles.orderStatus, color: statusColor(o.status) }}>{o.status}</span>
-                <span style={styles.orderTotal}>${Number(o.total).toFixed(2)}</span>
+              <div key={o.id}>
+                <div style={{ ...styles.orderRow, cursor: 'pointer' }} onClick={() => toggleExpand(o.id)}>
+                  <span style={styles.orderName}>{o.customer_name || 'Cliente'}</span>
+                  <span style={{ ...styles.orderStatus, color: statusColor(o.status) }}>{o.status}</span>
+                  <span style={styles.orderTotal}>${Number(o.total).toFixed(2)}</span>
+                </div>
+                {expandedId === o.id && (
+                  <div style={styles.orderDetail}>
+                    {itemsByOrder[o.id] === undefined ? (
+                      <div style={styles.empty}>Cargando…</div>
+                    ) : (
+                      <>
+                        {itemsByOrder[o.id].map((item, idx) => (
+                          <div key={idx} style={styles.detailItem}>
+                            {item.quantity}× {item.products?.name || item.product_name} — ${Number(item.price).toFixed(2)}
+                          </div>
+                        ))}
+                        <div style={styles.detailMeta}>
+                          {o.phone && <div>📞 {o.phone}</div>}
+                          {o.delivery_type === 'domicilio' && o.address && <div>📍 {o.address}</div>}
+                          {o.delivery_type === 'recoger' && <div>🏪 Recoger en tienda</div>}
+                          {o.delivery_time && <div>⏰ {o.delivery_time}</div>}
+                          {o.notes && <div>📝 {o.notes}</div>}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           )}
@@ -232,4 +273,13 @@ const styles = {
   orderName: { flex: 1, fontFamily: tokens.fonts.sans, fontSize: '14px', color: tokens.colors.ink },
   orderStatus: { fontFamily: tokens.fonts.mono, fontSize: '11px', textTransform: 'uppercase' },
   orderTotal: { fontFamily: tokens.fonts.mono, fontSize: '13px', color: tokens.colors.ink },
+  orderDetail: {
+    background: tokens.colors.paperShade, borderRadius: tokens.radius.sm,
+    padding: '12px 14px', marginBottom: '4px', fontFamily: tokens.fonts.sans, fontSize: '13px', color: tokens.colors.ink,
+  },
+  detailItem: { marginBottom: '4px' },
+  detailMeta: {
+    marginTop: '8px', paddingTop: '8px', borderTop: `1px dashed ${tokens.colors.border}`,
+    display: 'flex', flexDirection: 'column', gap: '3px', color: tokens.colors.inkFaded, fontSize: '12px',
+  },
 };
