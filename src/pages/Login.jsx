@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { tokens, perforatedEdge } from '../styles/tokens';
+import { tokens } from '../styles/tokens';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -19,45 +19,40 @@ export default function Login() {
 
   return (
     <div style={styles.page}>
-      <div style={styles.ticket}>
-        <div style={{ ...perforatedEdge(tokens.colors.counter), marginBottom: '-1px' }} />
-        <div style={styles.ticketBody}>
-          <div style={styles.eyebrow}>PANEL DE NEGOCIO</div>
-          <h1 style={styles.title}>Iniciar sesión</h1>
-          <p style={styles.subtitle}>Accede a tu menú y estadísticas</p>
+      <div style={styles.card}>
+        <div style={styles.title}>Panel de negocio</div>
+        <p style={styles.subtitle}>Inicia sesión para continuar</p>
 
-          <form onSubmit={handleLogin} style={styles.form}>
-            <label style={styles.label}>
-              Correo
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={styles.input}
-                placeholder="tucorreo@negocio.com"
-              />
-            </label>
-            <label style={styles.label}>
-              Contraseña
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={styles.input}
-                placeholder="••••••••"
-              />
-            </label>
+        <form onSubmit={handleLogin} style={styles.form}>
+          <label style={styles.label}>
+            Correo
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={styles.input}
+              placeholder="tucorreo@negocio.com"
+            />
+          </label>
+          <label style={styles.label}>
+            Contraseña
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={styles.input}
+              placeholder="••••••••"
+            />
+          </label>
 
-            {error && <div style={styles.error}>{error}</div>}
+          {error && <div style={styles.error}>{error}</div>}
 
-            <button type="submit" disabled={loading} style={styles.button}>
-              {loading ? 'Entrando…' : 'Entrar'}
-            </button>
-          </form>
-        </div>
-        <div style={{ ...perforatedEdge(tokens.colors.counter), marginTop: '-1px', transform: 'scaleY(-1)' }} />
+          <button type="submit" disabled={loading} style={styles.button}>
+            {loading ? 'Entrando…' : 'Entrar'}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -66,76 +61,68 @@ export default function Login() {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: tokens.colors.counter,
+    background: tokens.colors.bg,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontFamily: tokens.fonts.sans,
     padding: '24px',
   },
-  ticket: {
+  card: {
     width: '100%',
-    maxWidth: '380px',
-  },
-  ticketBody: {
-    background: tokens.colors.paper,
-    padding: '40px 32px',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.35)',
-  },
-  eyebrow: {
-    fontFamily: tokens.fonts.mono,
-    fontSize: '11px',
-    letterSpacing: '0.12em',
-    color: tokens.colors.inkFaded,
-    marginBottom: '8px',
+    maxWidth: '360px',
+    background: tokens.colors.surface,
+    border: `1px solid ${tokens.colors.border}`,
+    borderRadius: tokens.radius.md,
+    padding: '36px 32px',
   },
   title: {
-    fontFamily: tokens.fonts.mono,
-    fontSize: '26px',
-    color: tokens.colors.ink,
+    fontSize: '18px',
+    fontWeight: 600,
+    color: tokens.colors.text,
     margin: '0 0 4px 0',
   },
   subtitle: {
-    fontSize: '14px',
-    color: tokens.colors.inkFaded,
-    margin: '0 0 28px 0',
+    fontSize: '13px',
+    color: tokens.colors.textMuted,
+    margin: '0 0 24px 0',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '18px',
+    gap: '16px',
   },
   label: {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
     fontSize: '13px',
-    color: tokens.colors.inkFaded,
+    color: tokens.colors.textMuted,
   },
   input: {
     fontFamily: tokens.fonts.sans,
-    fontSize: '15px',
-    padding: '11px 12px',
+    fontSize: '14px',
+    padding: '10px 12px',
     borderRadius: tokens.radius.sm,
     border: `1px solid ${tokens.colors.border}`,
-    background: '#fff',
-    color: tokens.colors.ink,
+    background: tokens.colors.bg,
+    color: tokens.colors.text,
     outline: 'none',
   },
   error: {
     fontSize: '13px',
-    color: tokens.colors.stampRed,
+    color: tokens.colors.danger,
   },
   button: {
-    fontFamily: tokens.fonts.mono,
+    fontFamily: tokens.fonts.sans,
     fontSize: '14px',
-    letterSpacing: '0.04em',
-    padding: '13px',
+    fontWeight: 600,
+    padding: '11px',
     borderRadius: tokens.radius.sm,
     border: 'none',
-    background: tokens.colors.counter,
-    color: tokens.colors.onCounter,
+    background: tokens.colors.text,
+    color: '#fff',
     cursor: 'pointer',
-    marginTop: '6px',
+    marginTop: '4px',
   },
 };
