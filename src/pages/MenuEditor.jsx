@@ -39,6 +39,11 @@ export default function MenuEditor({ businessId }) {
     loadProducts();
   };
 
+  const toggleActive = async (product) => {
+    setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, active: !p.active } : p)));
+    await supabase.from('products').update({ active: !product.active }).eq('id', product.id);
+  };
+
   const handleDelete = async (id) => {
     if (!confirm('¿Eliminar este producto del menú?')) return;
     await supabase.from('products').delete().eq('id', id);
@@ -74,10 +79,9 @@ export default function MenuEditor({ businessId }) {
                   {p.image_url && <img src={p.image_url} alt={p.name} style={styles.thumb} />}
                   <div style={{ flex: 1 }}>
                     <div style={styles.rowName}>{p.name}</div>
-                    <div style={styles.rowMeta}>
-                      ${Number(p.price).toFixed(2)} · {p.active ? 'Activo' : 'Oculto'}
-                    </div>
+                    <div style={styles.rowMeta}>${Number(p.price).toFixed(2)}</div>
                   </div>
+                  <Switch checked={p.active} onChange={() => toggleActive(p)} />
                   <button style={styles.linkButton} onClick={() => setEditing(p)}>Editar</button>
                   <button style={{ ...styles.linkButton, color: tokens.colors.danger }} onClick={() => handleDelete(p.id)}>
                     Eliminar
@@ -97,6 +101,27 @@ export default function MenuEditor({ businessId }) {
         />
       )}
     </div>
+  );
+}
+
+function Switch({ checked, onChange }) {
+  return (
+    <button
+      onClick={onChange}
+      style={{
+        width: '38px', height: '22px', borderRadius: '999px', border: 'none', cursor: 'pointer',
+        background: checked ? tokens.colors.success : tokens.colors.borderStrong,
+        position: 'relative', flexShrink: 0, transition: 'background 0.15s',
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute', top: '3px', left: checked ? '19px' : '3px',
+          width: '16px', height: '16px', borderRadius: '50%', background: '#fff',
+          transition: 'left 0.15s',
+        }}
+      />
+    </button>
   );
 }
 
