@@ -145,14 +145,14 @@ function buildDailySeries(orders, days) {
 }
 
 const styles = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' },
   title: { fontSize: '20px', fontWeight: 600, color: tokens.colors.text, margin: 0 },
   rangeSwitch: { display: 'flex', gap: '2px', background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, padding: '3px', borderRadius: tokens.radius.sm },
   rangeButton: {
     fontSize: '12px', padding: '6px 11px', border: 'none', borderRadius: '4px', cursor: 'pointer',
   },
-  statRow: { display: 'flex', gap: '12px', marginBottom: '16px' },
-  statCard: { flex: 1, background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, padding: '16px 18px' },
+  statRow: { display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' },
+  statCard: { flex: '1 1 140px', background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, padding: '16px 18px' },
   statLabel: { fontSize: '12px', color: tokens.colors.textMuted },
   statValue: { fontSize: '22px', fontWeight: 600, color: tokens.colors.text, marginTop: '4px' },
   panel: { background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, padding: '18px', marginBottom: '16px' },
