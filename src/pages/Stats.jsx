@@ -13,12 +13,8 @@ export default function Stats({ businessId }) {
   const [range, setRange] = useState('7d');
   const [orders, setOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
-  const [liveOrders, setLiveOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState(null);
-  const [itemsByOrder, setItemsByOrder] = useState({});
 
-  // Carga ventas del período + productos más vendidos
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -56,51 +52,6 @@ export default function Stats({ businessId }) {
     load();
   }, [businessId, range]);
 
-  // Historial reciente + suscripción en tiempo real a pedidos nuevos
-  useEffect(() => {
-    const loadRecent = async () => {
-      const { data } = await supabase
-        .from('orders')
-        .select('id, customer_name, phone, delivery_type, address, delivery_time, notes, total, status, created_at')
-        .eq('business_id', businessId)
-        .order('created_at', { ascending: false })
-        .limit(15);
-      setLiveOrders(data || []);
-    };
-    loadRecent();
-
-    const channel = supabase
-      .channel(`orders-${businessId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders', filter: `business_id=eq.${businessId}` },
-        (payload) => setLiveOrders((prev) => [payload.new, ...prev].slice(0, 15))
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `business_id=eq.${businessId}` },
-        (payload) => setLiveOrders((prev) => prev.map((o) => (o.id === payload.new.id ? payload.new : o)))
-      )
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [businessId]);
-
-  const toggleExpand = async (orderId) => {
-    if (expandedId === orderId) {
-      setExpandedId(null);
-      return;
-    }
-    setExpandedId(orderId);
-    if (!itemsByOrder[orderId]) {
-      const { data } = await supabase
-        .from('order_items')
-        .select('product_name, products(name), quantity, price')
-        .eq('order_id', orderId);
-      setItemsByOrder((prev) => ({ ...prev, [orderId]: data || [] }));
-    }
-  };
-
   const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
   const chartData = buildDailySeries(orders, RANGES.find((r) => r.key === range).days);
 
@@ -115,8 +66,8 @@ export default function Stats({ businessId }) {
               onClick={() => setRange(r.key)}
               style={{
                 ...styles.rangeButton,
-                background: range === r.key ? tokens.colors.pendingAmber : 'transparent',
-                color: range === r.key ? tokens.colors.counter : tokens.colors.onCounterFaded,
+                background: range === r.key ? tokens.colors.text : 'transparent',
+                color: range === r.key ? '#fff' : tokens.colors.textMuted,
               }}
             >
               {r.label}
@@ -125,10 +76,10 @@ export default function Stats({ businessId }) {
         </div>
       </div>
 
-      <div style={styles.ticketRow}>
-        <StatTicket label="Ingresos" value={`$${revenue.toFixed(2)}`} />
-        <StatTicket label="Pedidos" value={orders.length} />
-        <StatTicket
+      <div style={styles.statRow}>
+        <Stat label="Ingresos" value={`$${revenue.toFixed(2)}`} />
+        <Stat label="Pedidos" value={orders.length} />
+        <Stat
           label="Ticket promedio"
           value={`$${orders.length ? (revenue / orders.length).toFixed(2) : '0.00'}`}
         />
@@ -142,89 +93,40 @@ export default function Stats({ businessId }) {
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
               <CartesianGrid stroke={tokens.colors.border} vertical={false} />
-              <XAxis dataKey="day" tick={{ fontFamily: tokens.fonts.mono, fontSize: 11, fill: tokens.colors.inkFaded }} />
-              <YAxis tick={{ fontFamily: tokens.fonts.mono, fontSize: 11, fill: tokens.colors.inkFaded }} />
+              <XAxis dataKey="day" tick={{ fontFamily: tokens.fonts.sans, fontSize: 11, fill: tokens.colors.textMuted }} axisLine={{ stroke: tokens.colors.border }} tickLine={false} />
+              <YAxis tick={{ fontFamily: tokens.fonts.sans, fontSize: 11, fill: tokens.colors.textMuted }} axisLine={false} tickLine={false} />
               <Tooltip formatter={(v) => [`$${v.toFixed(2)}`, 'Ingresos']} />
-              <Line type="monotone" dataKey="total" stroke={tokens.colors.stampRed} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="total" stroke={tokens.colors.accent} strokeWidth={2} dot={false} />
             </LineChart>
           </ResponsiveContainer>
         )}
       </div>
 
-      <div style={styles.twoCol}>
-        <div style={styles.panel}>
-          <div style={styles.panelTitle}>Productos más vendidos</div>
-          {topProducts.length === 0 ? (
-            <div style={styles.empty}>Sin ventas en este período.</div>
-          ) : (
-            topProducts.map((p, i) => (
-              <div key={p.name} style={styles.rankRow}>
-                <span style={styles.rankNum}>{String(i + 1).padStart(2, '0')}</span>
-                <span style={styles.rankName}>{p.name}</span>
-                <span style={styles.rankQty}>{p.qty}</span>
-              </div>
-            ))
-          )}
-        </div>
-
-        <div style={styles.panel}>
-          <div style={styles.panelTitle}>
-            Pedidos en vivo <span style={styles.liveDot} />
-          </div>
-          {liveOrders.length === 0 ? (
-            <div style={styles.empty}>Aún no hay pedidos.</div>
-          ) : (
-            liveOrders.map((o) => (
-              <div key={o.id}>
-                <div style={{ ...styles.orderRow, cursor: 'pointer' }} onClick={() => toggleExpand(o.id)}>
-                  <span style={styles.orderName}>{o.customer_name || 'Cliente'}</span>
-                  <span style={{ ...styles.orderStatus, color: statusColor(o.status) }}>{o.status}</span>
-                  <span style={styles.orderTotal}>${Number(o.total).toFixed(2)}</span>
-                </div>
-                {expandedId === o.id && (
-                  <div style={styles.orderDetail}>
-                    {itemsByOrder[o.id] === undefined ? (
-                      <div style={styles.empty}>Cargando…</div>
-                    ) : (
-                      <>
-                        {itemsByOrder[o.id].map((item, idx) => (
-                          <div key={idx} style={styles.detailItem}>
-                            {item.quantity}× {item.products?.name || item.product_name} — ${Number(item.price).toFixed(2)}
-                          </div>
-                        ))}
-                        <div style={styles.detailMeta}>
-                          {o.phone && <div>📞 {o.phone}</div>}
-                          {o.delivery_type === 'domicilio' && o.address && <div>📍 {o.address}</div>}
-                          {o.delivery_type === 'recoger' && <div>🏪 Recoger en tienda</div>}
-                          {o.delivery_time && <div>⏰ {o.delivery_time}</div>}
-                          {o.notes && <div>📝 {o.notes}</div>}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+      <div style={styles.panel}>
+        <div style={styles.panelTitle}>Productos más vendidos</div>
+        {topProducts.length === 0 ? (
+          <div style={styles.empty}>Sin ventas en este período.</div>
+        ) : (
+          topProducts.map((p, i) => (
+            <div key={p.name} style={styles.rankRow}>
+              <span style={styles.rankNum}>{i + 1}</span>
+              <span style={styles.rankName}>{p.name}</span>
+              <span style={styles.rankQty}>{p.qty}</span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-function StatTicket({ label, value }) {
+function Stat({ label, value }) {
   return (
-    <div style={styles.ticket}>
-      <div style={styles.ticketLabel}>{label}</div>
-      <div style={styles.ticketValue}>{value}</div>
+    <div style={styles.statCard}>
+      <div style={styles.statLabel}>{label}</div>
+      <div style={styles.statValue}>{value}</div>
     </div>
   );
-}
-
-function statusColor(status) {
-  if (status === 'pagado' || status === 'completado') return tokens.colors.registerGreen;
-  if (status === 'cancelado') return tokens.colors.stampRed;
-  return tokens.colors.pendingAmber;
 }
 
 function buildDailySeries(orders, days) {
@@ -243,43 +145,22 @@ function buildDailySeries(orders, days) {
 }
 
 const styles = {
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
-  title: { fontFamily: tokens.fonts.mono, fontSize: '22px', color: tokens.colors.onCounter, margin: 0 },
-  rangeSwitch: { display: 'flex', gap: '4px', background: tokens.colors.counterRaised, padding: '4px', borderRadius: tokens.radius.sm },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  title: { fontSize: '20px', fontWeight: 600, color: tokens.colors.text, margin: 0 },
+  rangeSwitch: { display: 'flex', gap: '2px', background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, padding: '3px', borderRadius: tokens.radius.sm },
   rangeButton: {
-    fontFamily: tokens.fonts.mono, fontSize: '12px', padding: '7px 12px',
-    border: 'none', borderRadius: tokens.radius.sm, cursor: 'pointer',
+    fontSize: '12px', padding: '6px 11px', border: 'none', borderRadius: '4px', cursor: 'pointer',
   },
-  ticketRow: { display: 'flex', gap: '16px', marginBottom: '24px' },
-  ticket: { flex: 1, background: tokens.colors.paper, borderRadius: tokens.radius.md, padding: '18px 20px' },
-  ticketLabel: { fontFamily: tokens.fonts.mono, fontSize: '11px', letterSpacing: '0.08em', color: tokens.colors.inkFaded, textTransform: 'uppercase' },
-  ticketValue: { fontFamily: tokens.fonts.mono, fontSize: '26px', color: tokens.colors.ink, marginTop: '6px' },
-  panel: { background: tokens.colors.paper, borderRadius: tokens.radius.md, padding: '20px', marginBottom: '20px' },
-  panelTitle: {
-    fontFamily: tokens.fonts.mono, fontSize: '13px', letterSpacing: '0.05em',
-    color: tokens.colors.ink, marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px',
-  },
-  liveDot: {
-    width: '7px', height: '7px', borderRadius: '50%', background: tokens.colors.registerGreen, display: 'inline-block',
-  },
-  loading: { color: tokens.colors.inkFaded, fontFamily: tokens.fonts.mono, fontSize: '13px' },
-  empty: { color: tokens.colors.inkFaded, fontFamily: tokens.fonts.sans, fontSize: '13px' },
-  twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
-  rankRow: { display: 'flex', alignItems: 'center', gap: '12px', padding: '9px 0', borderBottom: `1px solid ${tokens.colors.border}` },
-  rankNum: { fontFamily: tokens.fonts.mono, fontSize: '12px', color: tokens.colors.pendingAmber },
-  rankName: { flex: 1, fontFamily: tokens.fonts.sans, fontSize: '14px', color: tokens.colors.ink },
-  rankQty: { fontFamily: tokens.fonts.mono, fontSize: '13px', color: tokens.colors.inkFaded },
-  orderRow: { display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderBottom: `1px solid ${tokens.colors.border}` },
-  orderName: { flex: 1, fontFamily: tokens.fonts.sans, fontSize: '14px', color: tokens.colors.ink },
-  orderStatus: { fontFamily: tokens.fonts.mono, fontSize: '11px', textTransform: 'uppercase' },
-  orderTotal: { fontFamily: tokens.fonts.mono, fontSize: '13px', color: tokens.colors.ink },
-  orderDetail: {
-    background: tokens.colors.paperShade, borderRadius: tokens.radius.sm,
-    padding: '12px 14px', marginBottom: '4px', fontFamily: tokens.fonts.sans, fontSize: '13px', color: tokens.colors.ink,
-  },
-  detailItem: { marginBottom: '4px' },
-  detailMeta: {
-    marginTop: '8px', paddingTop: '8px', borderTop: `1px dashed ${tokens.colors.border}`,
-    display: 'flex', flexDirection: 'column', gap: '3px', color: tokens.colors.inkFaded, fontSize: '12px',
-  },
+  statRow: { display: 'flex', gap: '12px', marginBottom: '16px' },
+  statCard: { flex: 1, background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, padding: '16px 18px' },
+  statLabel: { fontSize: '12px', color: tokens.colors.textMuted },
+  statValue: { fontSize: '22px', fontWeight: 600, color: tokens.colors.text, marginTop: '4px' },
+  panel: { background: tokens.colors.surface, border: `1px solid ${tokens.colors.border}`, borderRadius: tokens.radius.md, padding: '18px', marginBottom: '16px' },
+  panelTitle: { fontSize: '13px', fontWeight: 600, color: tokens.colors.text, marginBottom: '12px' },
+  loading: { color: tokens.colors.textMuted, fontSize: '13px' },
+  empty: { color: tokens.colors.textMuted, fontSize: '13px' },
+  rankRow: { display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: `1px solid ${tokens.colors.border}` },
+  rankNum: { fontSize: '12px', color: tokens.colors.textMuted, width: '14px' },
+  rankName: { flex: 1, fontSize: '14px', color: tokens.colors.text },
+  rankQty: { fontFamily: tokens.fonts.mono, fontSize: '13px', color: tokens.colors.textMuted },
 };
